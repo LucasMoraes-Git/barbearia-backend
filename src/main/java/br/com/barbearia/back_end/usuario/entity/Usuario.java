@@ -33,4 +33,7 @@ public class Usuario {
     @Column(name = "TX_USUARIO_PERFIL")
     private UsuarioPerfilEnum usuarioPerfil;
 
+    @Column(name = "ATIVO", nullable = false)
+    private Boolean ativo = true;
+
 }

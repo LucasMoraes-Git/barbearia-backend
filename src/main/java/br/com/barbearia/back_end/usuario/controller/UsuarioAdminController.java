@@ -10,5 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class UsuarioAdminController {
 
     @Autowired
-    private UsuarioService us;
+    private UsuarioService service;
+
 }

@@ -25,7 +25,7 @@ public class ServicoService {
 
     public Servico cadastrarServico(CriarServicoRequest request)
     {
-        Servico servico = mapper.createToEntityDTO(request);
+        Servico servico = mapper.criarParaEntidade(request);
         return repository.save(servico);
     }
 
@@ -89,7 +89,7 @@ public class ServicoService {
     public ServicoResponse updateServico(AtualizarServicoRequest servicoUpdate, Long id)
     {
         var servico = repository.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Serviço com ID " + id + " não encontrado"));
-        mapper.updateToEntityDTO(servicoUpdate, servico);
+        mapper.atualizarParaEntidade(servicoUpdate, servico);
         return mapper.servicoResponseDTO(servico);
     }
 

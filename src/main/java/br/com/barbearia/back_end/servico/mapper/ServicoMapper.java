@@ -15,9 +15,10 @@ import java.util.List;
 public interface ServicoMapper {
 
     ServicoResponse servicoResponseDTO(Servico response);
-    List<ServicoResponse> listaServicoResponseDTO(List<Servico> response);
-    Servico createToEntityDTO(CriarServicoRequest request);
+
+    Servico criarParaEntidade(CriarServicoRequest request);
+
     @Mapping(target = "id", ignore = true)
-    void updateToEntityDTO(AtualizarServicoRequest request, @MappingTarget Servico servico);
+    void atualizarParaEntidade(AtualizarServicoRequest request, @MappingTarget Servico servico);
 
 }

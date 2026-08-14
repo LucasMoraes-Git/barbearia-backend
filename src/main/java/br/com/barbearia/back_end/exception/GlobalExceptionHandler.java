@@ -22,8 +22,18 @@ public class GlobalExceptionHandler {
     public ProblemDetail tratarPrecoInadequado(PrecoInadequadoException exception)
     {
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
-        problema.setTitle("Preço inadequado.");
+        problema.setTitle("Preço inadequado");
         problema.setProperty("codigo", "PRECO_INADEQUADO");
+
+        return problema;
+    }
+
+    @ExceptionHandler(RecursoDuplicadoException.class)
+    public ProblemDetail tratarRecursoDuplicado(RecursoDuplicadoException exception)
+    {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        problema.setTitle("Recurso duplicado");
+        problema.setProperty("codigo", "RECURSO_DUPLICADO");
 
         return problema;
     }
