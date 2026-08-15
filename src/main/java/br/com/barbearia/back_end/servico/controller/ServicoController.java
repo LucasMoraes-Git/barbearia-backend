@@ -22,58 +22,58 @@ public class ServicoController {
 
 
     @GetMapping("/pelo-id/{id}")
-    private ResponseEntity<ServicoResponse> findByIdServico(@PathVariable Long id)
+    public ResponseEntity<ServicoResponse> findByIdServico(@PathVariable Long id)
     {
         return ResponseEntity.ok(service.findByIdServico(id));
     }
 
     @GetMapping("/preco-abaixo-de/{preco}")
-    private ResponseEntity<List<ServicoResponse>> findByPrecoServico(@PathVariable Double preco)
+    public ResponseEntity<List<ServicoResponse>> findByPrecoServico(@PathVariable Double preco)
     {
         return ResponseEntity.ok(service.findByPrecoServico(preco));
     }
 
     @GetMapping("/ativo")
-    private ResponseEntity<List<ServicoResponse>> findByAtivoServico()
+    public ResponseEntity<List<ServicoResponse>> findByAtivoServico()
     {
         return ResponseEntity.ok(service.findByAtivoServico());
     }
 
     @GetMapping("/inativo")
-    private ResponseEntity<List<ServicoResponse>> findByInativoServico()
+    public ResponseEntity<List<ServicoResponse>> findByInativoServico()
     {
         return ResponseEntity.ok(service.findByInativoServico());
     }
 
     @GetMapping("/com-nome/{nome}")
-    private ResponseEntity<List<ServicoResponse>> findByNomeServico(@PathVariable String nome)
+    public ResponseEntity<List<ServicoResponse>> findByNomeServico(@PathVariable String nome)
     {
         return ResponseEntity.ok(service.findByNomeServico(nome));
     }
 
     @PostMapping("/cadastro")
-    private ResponseEntity<Servico> cadastrarServico(@Valid @RequestBody CriarServicoRequest request)
+    public ResponseEntity<Servico> cadastrarServico(@Valid @RequestBody CriarServicoRequest request)
     {
         Servico servico = service.cadastrarServico(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(servico);
     }
 
     @PutMapping("/atualizar/{id}")
-    private ResponseEntity<ServicoResponse> atualizarServico(@Valid @RequestBody AtualizarServicoRequest request, @PathVariable Long id)
+    public ResponseEntity<ServicoResponse> atualizarServico(@Valid @RequestBody AtualizarServicoRequest request, @PathVariable Long id)
     {
         ServicoResponse servico = service.updateServico(request, id);
         return ResponseEntity.ok(servico);
     }
 
     @PatchMapping("/{id}/ativar")
-    private ResponseEntity<Void> ativarServico(@PathVariable Long id)
+    public ResponseEntity<Void> ativarServico(@PathVariable Long id)
     {
         service.ativarServico(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/desativar")
-    private ResponseEntity<Void> desativarServico(@PathVariable Long id)
+    public ResponseEntity<Void> desativarServico(@PathVariable Long id)
     {
         service.desativarServico(id);
         return ResponseEntity.noContent().build();
