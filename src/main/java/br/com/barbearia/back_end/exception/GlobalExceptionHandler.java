@@ -58,4 +58,25 @@ public class GlobalExceptionHandler {
 
         return problema;
     }
+
+    @ExceptionHandler(HorarioIndisponivelException.class)
+    public ProblemDetail tratarHorarioIndisponivel(HorarioIndisponivelException exception)
+    {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+
+        problema.setTitle("Horário indisponível");
+        problema.setProperty("codigo", "HORARIO_INDISPONIVEL");
+
+        return problema;
+    }
+
+    @ExceptionHandler(RecursoInativoException.class)
+    public ProblemDetail tratarRecursoInativo(RecursoInativoException exception)
+    {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+
+        problema.setTitle("Recurso está inativo");
+        problema.setProperty("codigo", "RECURSO_INATIVO");
+        return problema;
+    }
 }

@@ -1,5 +1,6 @@
 package br.com.barbearia.back_end.security;
 
+import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -112,9 +113,22 @@ public class SecurityConfig {
             HttpSecurity http,
             JwtAuthenticationConverter authenticationConverter
     ) throws Exception {
+
         return http
+
+                // A autenticação é feita por JWT no cabeçalho Authorization,
+                // e não por sessão ou cookie.
                 .csrf(AbstractHttpConfigurer::disable)
 
+                // Desativa as formas tradicionais de autenticação do Spring.
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+
+                // Não existe sessão de logout no JWT.
+                // O frontend simplesmente remove o token.
+                .logout(AbstractHttpConfigurer::disable)
+
+                // O Spring não armazenará a autenticação em uma sessão.
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
@@ -123,28 +137,50 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
+                        // Permite que o Spring Boot produza corretamente
+                        // respostas de erro e encaminhamentos internos.
+                        .dispatcherTypeMatchers(
+                                DispatcherType.ERROR,
+                                DispatcherType.FORWARD
+                        ).permitAll()
+
+                        // Rotas públicas de autenticação.
                         .requestMatchers(
                                 HttpMethod.POST,
-                                "/usuarios/cadastro",
-                                "/auth/login"
+                                "/auth/login",
+                                "/usuarios/cadastro"
                         ).permitAll()
 
+                        // Catálogo público.
+                        // Somente GET será público.
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/servicos/ativo"
+                                "/servicos/**"
                         ).permitAll()
 
+                        // Tudo que começa com /admin exige ROLE_ADMIN.
                         .requestMatchers(
                                 "/admin/**"
                         ).hasRole("ADMIN")
 
+                        // Alterações do próprio usuário exigem um JWT válido.
+                        .requestMatchers(
+                                "/usuarios/me/**"
+                        ).authenticated()
+
+                        // Por enquanto, seus endpoints de agendamento
+                        // listam todos os agendamentos.
                         .requestMatchers(
                                 "/agendamentos/**"
-                        ).hasRole("ADMIN")
+                        ).authenticated()
 
-                        .anyRequest().authenticated()
+                        // Bloqueia qualquer endpoint que não tenha
+                        // uma regra declarada acima.
+                        .anyRequest().denyAll()
                 )
 
+                // Configura a API como Resource Server.
+                // O Spring procurará o JWT no cabeçalho Bearer.
                 .oauth2ResourceServer(oauth2 ->
                         oauth2.jwt(jwt ->
                                 jwt.jwtAuthenticationConverter(

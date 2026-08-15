@@ -48,10 +48,14 @@ public class UsuarioService {
         return mapper.paraUsuarioResponse(usuarioSalvo);
     }
 
-    public UsuarioResponse findByIdUsuario(Long id)
+    public UsuarioResponse buscarMeuPerfil(Long id)
     {
-        Usuario usuario = repository.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Usuário com id " + id + " não encontrado"));
+        Usuario usuario = repository.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Usuário com id " + id + " não encontrado."));
         UsuarioResponse response = mapper.paraUsuarioResponse(usuario);
+        if(!Boolean.TRUE.equals(response.ativo()))
+        {
+            throw new RecursoNaoEncontradoException("Usuário com id " + id + " foi desativado.");
+        }
         return response;
     }
 

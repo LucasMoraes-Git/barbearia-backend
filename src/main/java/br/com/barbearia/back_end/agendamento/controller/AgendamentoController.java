@@ -1,13 +1,17 @@
 package br.com.barbearia.back_end.agendamento.controller;
 
+import br.com.barbearia.back_end.agendamento.dto.AgendamentoResponse;
+import br.com.barbearia.back_end.agendamento.dto.CriarAgendamentoRequest;
 import br.com.barbearia.back_end.agendamento.entity.Agendamento;
+import br.com.barbearia.back_end.agendamento.enums.StatusAgendamentoEnum;
 import br.com.barbearia.back_end.agendamento.service.AgendamentoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -16,28 +20,16 @@ import java.util.List;
 public class AgendamentoController {
 
     @Autowired
-    private AgendamentoService as;
+    private AgendamentoService service;
 
-    @GetMapping
-    public ResponseEntity<List<Agendamento>> listarTodosAgendamentos()
+    @PostMapping
+    public ResponseEntity<AgendamentoResponse> cadastrarAgendamento(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CriarAgendamentoRequest request)
     {
-        var agendamentos = as.listarTodosAgendamentos();
-        if(agendamentos.isEmpty())
-        {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(agendamentos);
-    }
+        Long usuarioId = Long.valueOf(jwt.getClaimAsString("usuarioId"));
 
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<Agendamento>> listarAgendamentoPorStatus(@PathVariable String status)
-    {
-        var agendamentos = as.listarAgendamentoPorStatus(status);
-        if(agendamentos.isEmpty())
-        {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(agendamentos);
+        AgendamentoResponse response = service.cadastrarAgendamento(usuarioId, request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
 }

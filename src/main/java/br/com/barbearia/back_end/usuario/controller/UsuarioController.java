@@ -1,6 +1,7 @@
 package br.com.barbearia.back_end.usuario.controller;
 
 import br.com.barbearia.back_end.usuario.dto.*;
+import br.com.barbearia.back_end.usuario.entity.Usuario;
 import br.com.barbearia.back_end.usuario.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,14 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioService service;
+
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioResponse> buscarMeuPerfil(@AuthenticationPrincipal Jwt jwt)
+    {
+        Long usuarioId = Long.valueOf(jwt.getClaimAsString("usuarioId"));
+        UsuarioResponse response = service.buscarMeuPerfil(usuarioId);
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping("/cadastro")
     public ResponseEntity<UsuarioResponse> cadastrarUsuario(@Valid @RequestBody CriarUsuarioRequest request)
