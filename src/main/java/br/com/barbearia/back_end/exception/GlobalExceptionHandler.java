@@ -37,4 +37,14 @@ public class GlobalExceptionHandler {
 
         return problema;
     }
+
+    @ExceptionHandler(CredenciaisInvalidasException.class)
+    public ProblemDetail tratarCredenciaisInvalidas(CredenciaisInvalidasException exception)
+    {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, exception.getMessage());
+        problema.setTitle("Falha na autenticação");
+        problema.setProperty("codigo", "CREDENCIAIS_INVALIDAS");
+
+        return problema;
+    }
 }
