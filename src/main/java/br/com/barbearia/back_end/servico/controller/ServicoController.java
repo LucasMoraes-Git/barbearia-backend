@@ -33,6 +33,12 @@ public class ServicoController {
         return ResponseEntity.ok(service.findByPrecoServico(preco));
     }
 
+    @GetMapping("/preco-entre/{precoMenor}/{precoMaior}")
+    public ResponseEntity<List<ServicoResponse>> findByPrecoBetweenPrecoMenorPrecoMaior(@PathVariable Double precoMenor, @PathVariable Double precoMaior)
+    {
+        return ResponseEntity.ok(service.findByPrecoBetweenPrecoMenorPrecoMaior(precoMenor, precoMaior));
+    }
+
     @GetMapping("/ativo")
     public ResponseEntity<List<ServicoResponse>> findByAtivoServico()
     {

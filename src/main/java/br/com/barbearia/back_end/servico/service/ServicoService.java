@@ -42,11 +42,37 @@ public class ServicoService {
             throw new PrecoInadequadoException("Preço " + preco + " inserido é inadequado");
         }
 
-        var servicos = repository.findByPrecoServico(preco);
+        var servicos = repository.findByPrecoServicoAtivo(preco);
 
         if (servicos.isEmpty())
         {
             throw new RecursoNaoEncontradoException("Serviços com preço abaixo de " + preco + " não foram encontrados.");
+        }
+        return servicos.stream().map(servico -> mapper.servicoResponseDTO(servico)).toList();
+    }
+
+    public List<ServicoResponse> findByPrecoBetweenPrecoMenorPrecoMaior(Double precoMenor, Double precoMaior)
+    {
+        if (precoMenor > precoMaior)
+        {
+            throw new PrecoInadequadoException("Preço minímo" + precoMenor + " inserido é maior que " + "preço máximo " + precoMaior);
+        }
+
+        if (precoMaior <= 0)
+        {
+            throw new PrecoInadequadoException("Preço máximo" + precoMenor + " deve ser maior ou igual a 0");
+        }
+
+        if (precoMenor <= 0)
+        {
+            throw new PrecoInadequadoException("Preço minímo" + precoMenor + " deve ser maior ou igual a 0");
+        }
+
+        var servicos = repository.findByPrecoBetweenPrecoMenorPrecoMaior(precoMenor, precoMaior);
+
+        if (servicos.isEmpty())
+        {
+            throw new RecursoNaoEncontradoException("Serviços neste intervalo de preço não foram encontrados.");
         }
         return servicos.stream().map(servico -> mapper.servicoResponseDTO(servico)).toList();
     }
@@ -106,4 +132,6 @@ public class ServicoService {
         var servico = repository.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Serviço com ID " + id + " não encontrado"));
         servico.setAtivo(false);
     }
+
 }
+

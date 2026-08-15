@@ -47,4 +47,15 @@ public class GlobalExceptionHandler {
 
         return problema;
     }
+
+    @ExceptionHandler(AlteracaoInvalidaException.class)
+    public ProblemDetail tratarRecursoRepetido(AlteracaoInvalidaException exception)
+    {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+
+        problema.setTitle("Alteração inválida");
+        problema.setProperty("codigo", "ALTERACAO_INVALIDA");
+
+        return problema;
+    }
 }
