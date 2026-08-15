@@ -53,19 +53,22 @@ public class ServicoService {
 
     public List<ServicoResponse> findByPrecoBetweenPrecoMenorPrecoMaior(Double precoMenor, Double precoMaior)
     {
-        if (precoMenor > precoMaior)
-        {
-            throw new PrecoInadequadoException("Preço minímo" + precoMenor + " inserido é maior que " + "preço máximo " + precoMaior);
+        if (precoMenor < 0) {
+            throw new PrecoInadequadoException(
+                    "Preço mínimo " + precoMenor + " deve ser maior ou igual a zero."
+            );
         }
 
-        if (precoMaior <= 0)
-        {
-            throw new PrecoInadequadoException("Preço máximo" + precoMenor + " deve ser maior ou igual a 0");
+        if (precoMaior < 0) {
+            throw new PrecoInadequadoException(
+                    "Preço máximo " + precoMaior + " deve ser maior ou igual a zero."
+            );
         }
 
-        if (precoMenor <= 0)
-        {
-            throw new PrecoInadequadoException("Preço minímo" + precoMenor + " deve ser maior ou igual a 0");
+        if (precoMenor > precoMaior) {
+            throw new PrecoInadequadoException(
+                    "O preço mínimo não pode ser maior que o preço máximo."
+            );
         }
 
         var servicos = repository.findByPrecoBetweenPrecoMenorPrecoMaior(precoMenor, precoMaior);

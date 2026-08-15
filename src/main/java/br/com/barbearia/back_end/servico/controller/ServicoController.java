@@ -45,44 +45,14 @@ public class ServicoController {
         return ResponseEntity.ok(service.findByAtivoServico());
     }
 
-    @GetMapping("/inativo")
-    public ResponseEntity<List<ServicoResponse>> findByInativoServico()
-    {
-        return ResponseEntity.ok(service.findByInativoServico());
-    }
-
     @GetMapping("/com-nome/{nome}")
     public ResponseEntity<List<ServicoResponse>> findByNomeServico(@PathVariable String nome)
     {
         return ResponseEntity.ok(service.findByNomeServico(nome));
     }
 
-    @PostMapping("/cadastro")
-    public ResponseEntity<Servico> cadastrarServico(@Valid @RequestBody CriarServicoRequest request)
-    {
-        Servico servico = service.cadastrarServico(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(servico);
-    }
 
-    @PutMapping("/atualizar/{id}")
-    public ResponseEntity<ServicoResponse> atualizarServico(@Valid @RequestBody AtualizarServicoRequest request, @PathVariable Long id)
-    {
-        ServicoResponse servico = service.updateServico(request, id);
-        return ResponseEntity.ok(servico);
-    }
 
-    @PatchMapping("/{id}/ativar")
-    public ResponseEntity<Void> ativarServico(@PathVariable Long id)
-    {
-        service.ativarServico(id);
-        return ResponseEntity.noContent().build();
-    }
 
-    @PatchMapping("/{id}/desativar")
-    public ResponseEntity<Void> desativarServico(@PathVariable Long id)
-    {
-        service.desativarServico(id);
-        return ResponseEntity.noContent().build();
-    }
 
 }

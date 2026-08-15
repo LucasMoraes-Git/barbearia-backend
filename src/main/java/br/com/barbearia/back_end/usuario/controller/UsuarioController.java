@@ -54,21 +54,6 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{email}/ativar")
-    public ResponseEntity<Void> ativarUsuario(@PathVariable String email)
-    {
-        service.ativarUsuarioPorEmail(email);
-
-        return ResponseEntity.noContent().build();
-    }
-
-    @PatchMapping("/{email}/desativar")
-    public ResponseEntity<Void> desativarUsuario(@PathVariable String email)
-    {
-        service.desativarUsuarioPorEmail(email);
-
-        return ResponseEntity.noContent().build();
-    }
 
 
 }

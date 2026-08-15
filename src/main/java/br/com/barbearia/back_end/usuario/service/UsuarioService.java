@@ -77,7 +77,7 @@ public class UsuarioService {
         {
             throw new AlteracaoInvalidaException("O novo nome inserido é o mesmo do antigo");
         }
-        usuario.setNome(request.nome());
+        usuario.setNome(request.nome().trim().toUpperCase(Locale.ROOT));
     }
 
     @Transactional
@@ -88,6 +88,11 @@ public class UsuarioService {
         if(usuario.getTelefone().equals(request.telefone()))
         {
             throw new AlteracaoInvalidaException("O novo telefone inserido é o mesmo do antigo");
+        }
+
+        if(repository.existsByTelefone(request.telefone()))
+        {
+            throw new AlteracaoInvalidaException("Este número pertence a outro usuário");
         }
 
         usuario.setTelefone(request.telefone());
