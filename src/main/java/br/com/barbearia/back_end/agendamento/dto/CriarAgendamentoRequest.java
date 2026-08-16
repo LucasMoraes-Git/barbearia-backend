@@ -11,7 +11,6 @@ public record CriarAgendamentoRequest(
         Long servicoId,
 
         @NotNull(message = "A data do serviço deve ser informada.")
-        @Future(message = "O agendamento deve ser realizado para uma data futura.")
         LocalDateTime dataServico,
 
         @Size(

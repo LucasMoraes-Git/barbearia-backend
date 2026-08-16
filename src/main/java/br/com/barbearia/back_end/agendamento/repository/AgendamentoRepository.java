@@ -41,4 +41,26 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
             @Param("novoFim") LocalDateTime novoFim
     );
 
+    @Query(
+            value = """
+                SELECT a.*
+                FROM TBL_AGENDAMENTO a
+                INNER JOIN TBL_SERVICO s
+                    ON s.ID_SERVICO = a.ID_SERVICO
+                WHERE a.TX_STATUS_AGENDAMENTO
+                    IN ('PENDENTE', 'CONFIRMADO')
+                  AND a.DT_DATA_SERVICO < :fimPeriodo
+                  AND DATEADD(
+                        MINUTE,
+                        s.NR_DURACAO_MINUTOS,
+                        a.DT_DATA_SERVICO
+                      ) > :inicioPeriodo
+                ORDER BY a.DT_DATA_SERVICO
+                """,
+            nativeQuery = true
+    )
+    List<Agendamento> buscarAgendamentosNoPeriodo(@Param("inicioPeriodo") LocalDateTime inicioPeriodo, @Param("fimPeriodo") LocalDateTime fimPeriodo);
+
+    List<Agendamento> findByUsuarioIdOrderByDataServicoDesc(Long usuarioId);
+
 }

@@ -25,5 +25,8 @@ public interface ServicoRepository extends JpaRepository<Servico, Long> {
     @Query(value = "SELECT * FROM TBL_SERVICO S WHERE lower(S.TX_NOME) LIKE lower(concat('%', :nome, '%'))", nativeQuery = true)
     List<Servico> findByNomeServico(@Param("nome") String nome);
 
+    @Query(value = "SELECT * FROM TBL_SERVICO S WHERE lower(S.TX_NOME) LIKE lower(concat('%', :nome, '%')) AND S.ATIVO = 1", nativeQuery = true)
+    List<Servico> findByNomeServicoAtivo(@Param("nome") String nome);
+
     Optional<Servico> findByIdAndAtivoTrue(Long id);
 }

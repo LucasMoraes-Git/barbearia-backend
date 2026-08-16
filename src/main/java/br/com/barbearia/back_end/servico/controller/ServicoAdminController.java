@@ -26,6 +26,18 @@ public class ServicoAdminController {
         return ResponseEntity.ok(service.findByInativoServico());
     }
 
+    @GetMapping("/pelo-id/{id}")
+    public ResponseEntity<ServicoResponse> findByIdServico(@PathVariable Long id)
+    {
+        return ResponseEntity.ok(service.findByIdServico(id));
+    }
+
+    @GetMapping("/com-nome/{nome}")
+    public ResponseEntity<List<ServicoResponse>> findByNomeServico(@PathVariable String nome)
+    {
+        return ResponseEntity.ok(service.findByNomeServico(nome));
+    }
+
     @PostMapping("/cadastro")
     public ResponseEntity<Servico> cadastrarServico(@Valid @RequestBody CriarServicoRequest request)
     {

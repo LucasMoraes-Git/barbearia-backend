@@ -24,7 +24,7 @@ public class ServicoController {
     @GetMapping("/pelo-id/{id}")
     public ResponseEntity<ServicoResponse> findByIdServico(@PathVariable Long id)
     {
-        return ResponseEntity.ok(service.findByIdServico(id));
+        return ResponseEntity.ok(service.findByIdAndAtivoTrue(id));
     }
 
     @GetMapping("/preco-abaixo-de/{preco}")
@@ -48,7 +48,7 @@ public class ServicoController {
     @GetMapping("/com-nome/{nome}")
     public ResponseEntity<List<ServicoResponse>> findByNomeServico(@PathVariable String nome)
     {
-        return ResponseEntity.ok(service.findByNomeServico(nome));
+        return ResponseEntity.ok(service.findByNomeServicoAtivo(nome));
     }
 
 

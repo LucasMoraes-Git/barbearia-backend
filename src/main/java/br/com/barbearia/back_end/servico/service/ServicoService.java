@@ -35,6 +35,12 @@ public class ServicoService {
         return mapper.servicoResponseDTO(servico);
     }
 
+    public ServicoResponse findByIdAndAtivoTrue(Long id)
+    {
+        var servico = repository.findByIdAndAtivoTrue(id).orElseThrow(() -> new RecursoNaoEncontradoException("Serviço com ID " + id + " não encontrado"));
+        return mapper.servicoResponseDTO(servico);
+    }
+
     public List<ServicoResponse> findByPrecoServico(Double preco)
     {
         if (preco < 0)
@@ -108,10 +114,22 @@ public class ServicoService {
 
         if(servicos.isEmpty())
         {
-            throw  new RecursoNaoEncontradoException("Serviços com o nome " + nome + " não foram encontrados.");
+            throw new RecursoNaoEncontradoException("Serviços com o nome " + nome + " não foram encontrados.");
         }
 
-        return servicos.stream().map(servico -> mapper.servicoResponseDTO(servico)).toList();
+        return servicos.stream().map(mapper::servicoResponseDTO).toList();
+    }
+
+    public List<ServicoResponse> findByNomeServicoAtivo(String nome)
+    {
+        var servicos = repository.findByNomeServicoAtivo(nome);
+
+        if(servicos.isEmpty())
+        {
+            throw new RecursoNaoEncontradoException("Serviços ativos com o nome " + nome + " não foram encontrados.");
+        }
+
+        return servicos.stream().map(mapper::servicoResponseDTO).toList();
     }
 
     @Transactional
