@@ -1,5 +1,6 @@
 package br.com.barbearia.back_end.agendamento.service;
 
+import br.com.barbearia.back_end.agendamento.config.ConfiguracaoAgendaProperties;
 import br.com.barbearia.back_end.agendamento.dto.*;
 import br.com.barbearia.back_end.agendamento.entity.Agendamento;
 import br.com.barbearia.back_end.agendamento.enums.StatusAgendamentoEnum;
@@ -18,8 +19,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -29,15 +28,14 @@ public class AgendamentoService {
     private ServicoRepository servicoRepository;
     @Autowired
     private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private ConfiguracaoAgendaProperties configuracaoAgenda;
-
-
     @Autowired
     private AgendamentoRepository agendamentoRepository;
     @Autowired
     private AgendamentoMapper mapper;
+    @Autowired
+    private DisponibilidadeAgendaService disponibilidadeService;
+    @Autowired
+    private ConfiguracaoAgendaProperties configuracaoAgenda;
 
     private record Intervalo(
             LocalDateTime inicio,
@@ -80,7 +78,7 @@ public class AgendamentoService {
                 servico.getDuracaoMinutos()
         );
 
-        validarRegrasDaAgenda(inicio, fim);
+        disponibilidadeService.validarRegrasDaAgenda(inicio, fim);
 
         boolean existeConflitoHorario =
                 agendamentoRepository
@@ -135,311 +133,6 @@ public class AgendamentoService {
         return agendamentos.stream().map(mapper::paraAgendamentoResponse).toList();
     }
 
-
-    private LocalDateTime arredondarParaProximoMinuto(
-            LocalDateTime horario
-    ) {
-        LocalDateTime semSegundos = horario
-                .withSecond(0)
-                .withNano(0);
-
-        if (horario.equals(semSegundos)) {
-            return semSegundos;
-        }
-
-        return semSegundos.plusMinutes(1);
-    }
-
-
-    private void validarPrecisaoDoHorario(
-            LocalDateTime horario
-    ) {
-        if (
-                horario.getSecond() != 0
-                        || horario.getNano() != 0
-        ) {
-            throw new HorarioIndisponivelException(
-                    "O horário deve ser informado com precisão de minutos."
-            );
-        }
-    }
-
-
-    private void validarRegrasDaAgenda(
-            LocalDateTime inicio,
-            LocalDateTime fim
-    ) {
-        validarPrecisaoDoHorario(inicio);
-
-        LocalDate data = inicio.toLocalDate();
-
-        if (
-                !configuracaoAgenda
-                        .diasAtendimento()
-                        .contains(data.getDayOfWeek())
-        ) {
-            throw new HorarioIndisponivelException(
-                    "A barbearia não atende no dia informado."
-            );
-        }
-
-        LocalDateTime agora = LocalDateTime.now(
-                configuracaoAgenda.fusoHorario()
-        );
-
-        LocalDateTime limiteMinimo =
-                arredondarParaProximoMinuto(
-                        agora.plus(
-                                configuracaoAgenda
-                                        .antecedenciaMinima()
-                        )
-                );
-
-        LocalDateTime limiteMaximo =
-                agora.plus(
-                                configuracaoAgenda
-                                        .antecedenciaMaxima()
-                        )
-                        .withSecond(0)
-                        .withNano(0);
-
-        if (inicio.isBefore(limiteMinimo)) {
-            throw new HorarioIndisponivelException(
-                    "O agendamento não respeita a antecedência mínima."
-            );
-        }
-
-        if (inicio.isAfter(limiteMaximo)) {
-            throw new HorarioIndisponivelException(
-                    "O agendamento ultrapassa a antecedência máxima."
-            );
-        }
-
-        LocalDateTime abertura = LocalDateTime.of(
-                data,
-                configuracaoAgenda.horarioAbertura()
-        );
-
-        LocalDateTime fechamento = LocalDateTime.of(
-                data,
-                configuracaoAgenda.horarioFechamento()
-        );
-
-        if (
-                inicio.isBefore(abertura)
-                        || fim.isAfter(fechamento)
-        ) {
-            throw new HorarioIndisponivelException(
-                    "O serviço deve ocorrer integralmente durante o horário de atendimento."
-            );
-        }
-
-        if (configuracaoAgenda.intervaloHabilitado()) {
-            LocalDateTime inicioIntervalo =
-                    LocalDateTime.of(
-                            data,
-                            configuracaoAgenda.intervaloInicio()
-                    );
-
-            LocalDateTime fimIntervalo =
-                    LocalDateTime.of(
-                            data,
-                            configuracaoAgenda.intervaloFim()
-                    );
-
-            boolean invadeIntervalo =
-                    inicio.isBefore(fimIntervalo)
-                            && fim.isAfter(inicioIntervalo);
-
-            if (invadeIntervalo) {
-                throw new HorarioIndisponivelException(
-                        "O serviço entra no intervalo da barbearia."
-                );
-            }
-        }
-    }
-
-    private List<IntervaloLivreResponse>
-    filtrarIntervalosQueComportamServico(
-            List<Intervalo> intervalosLivres,
-            Servico servico
-    ) {
-        List<IntervaloLivreResponse> respostas =
-                new ArrayList<>();
-
-        LocalDateTime agora = LocalDateTime.now(
-                configuracaoAgenda.fusoHorario()
-        );
-
-        LocalDateTime limiteMinimo =
-                arredondarParaProximoMinuto(
-                        agora.plus(
-                                configuracaoAgenda
-                                        .antecedenciaMinima()
-                        )
-                );
-
-        LocalDateTime limiteMaximo =
-                agora.plus(
-                                configuracaoAgenda
-                                        .antecedenciaMaxima()
-                        )
-                        .withSecond(0)
-                        .withNano(0);
-
-        for (Intervalo livre : intervalosLivres) {
-            LocalDateTime primeiroInicio =
-                    livre.inicio().isAfter(limiteMinimo)
-                            ? livre.inicio()
-                            : limiteMinimo;
-
-            LocalDateTime ultimoInicio =
-                    livre.fim().minusMinutes(
-                            servico.getDuracaoMinutos()
-                    );
-
-            if (ultimoInicio.isAfter(limiteMaximo)) {
-                ultimoInicio = limiteMaximo;
-            }
-
-            if (!primeiroInicio.isAfter(ultimoInicio)) {
-                respostas.add(
-                        new IntervaloLivreResponse(
-                                primeiroInicio,
-                                ultimoInicio,
-                                livre.fim()
-                        )
-                );
-            }
-        }
-
-        return respostas;
-    }
-
-    private List<Intervalo> calcularIntervalosLivres(
-            LocalDateTime abertura,
-            LocalDateTime fechamento,
-            List<Intervalo> ocupados
-    ) {
-        List<Intervalo> livres =
-                new ArrayList<>();
-
-        LocalDateTime cursor = abertura;
-
-        for (Intervalo ocupado : ocupados) {
-            LocalDateTime inicioOcupado =
-                    ocupado.inicio().isBefore(abertura)
-                            ? abertura
-                            : ocupado.inicio();
-
-            LocalDateTime fimOcupado =
-                    ocupado.fim().isAfter(fechamento)
-                            ? fechamento
-                            : ocupado.fim();
-
-            boolean foraDoFuncionamento =
-                    !fimOcupado.isAfter(abertura)
-                            || !inicioOcupado.isBefore(fechamento);
-
-            if (foraDoFuncionamento) {
-                continue;
-            }
-
-            if (inicioOcupado.isAfter(cursor)) {
-                livres.add(
-                        new Intervalo(
-                                cursor,
-                                inicioOcupado
-                        )
-                );
-            }
-
-            if (fimOcupado.isAfter(cursor)) {
-                cursor = fimOcupado;
-            }
-
-            if (!cursor.isBefore(fechamento)) {
-                break;
-            }
-        }
-
-        if (cursor.isBefore(fechamento)) {
-            livres.add(
-                    new Intervalo(
-                            cursor,
-                            fechamento
-                    )
-            );
-        }
-
-        return livres;
-    }
-
-    private List<Intervalo> criarIntervalosOcupados(
-            LocalDate data,
-            List<Agendamento> agendamentos
-    ) {
-        List<Intervalo> intervalos =
-                new ArrayList<>();
-
-        for (Agendamento agendamento : agendamentos) {
-            LocalDateTime inicio =
-                    agendamento.getDataServico();
-
-            LocalDateTime fim = inicio.plusMinutes(
-                    agendamento
-                            .getServico()
-                            .getDuracaoMinutos()
-            );
-
-            intervalos.add(
-                    new Intervalo(inicio, fim)
-            );
-        }
-
-        if (configuracaoAgenda.intervaloHabilitado()) {
-            LocalDateTime inicioIntervalo =
-                    LocalDateTime.of(
-                            data,
-                            configuracaoAgenda.intervaloInicio()
-                    );
-
-            LocalDateTime fimIntervalo =
-                    LocalDateTime.of(
-                            data,
-                            configuracaoAgenda.intervaloFim()
-                    );
-
-            intervalos.add(
-                    new Intervalo(
-                            inicioIntervalo,
-                            fimIntervalo
-                    )
-            );
-        }
-
-        intervalos.sort(
-                Comparator.comparing(Intervalo::inicio)
-        );
-
-        return intervalos;
-    }
-
-    private DisponibilidadeAgendamentoResponse
-    criarRespostaDisponibilidade(
-            Servico servico,
-            LocalDate data,
-            List<IntervaloLivreResponse> intervalos
-    ) {
-        return new DisponibilidadeAgendamentoResponse(
-                servico.getId(),
-                servico.getNome(),
-                servico.getDuracaoMinutos(),
-                data,
-                intervalos
-        );
-    }
-
     @Transactional
     public DisponibilidadeAgendamentoResponse
     buscarDisponibilidade(
@@ -454,27 +147,15 @@ public class AgendamentoService {
                         )
                 );
 
-        if (
-                !configuracaoAgenda
-                        .diasAtendimento()
-                        .contains(data.getDayOfWeek())
-        ) {
-            return criarRespostaDisponibilidade(
-                    servico,
-                    data,
-                    List.of()
-            );
-        }
 
-        LocalDateTime abertura = LocalDateTime.of(
-                data,
-                configuracaoAgenda.horarioAbertura()
-        );
+        DisponibilidadeAgendaService.Intervalo funcionamento =
+                disponibilidadeService.obterHorarioDeFuncionamento(data);
 
-        LocalDateTime fechamento = LocalDateTime.of(
-                data,
-                configuracaoAgenda.horarioFechamento()
-        );
+        LocalDateTime abertura =
+                funcionamento.inicio();
+
+        LocalDateTime fechamento =
+                funcionamento.fim();
 
         List<Agendamento> agendamentos =
                 agendamentoRepository
@@ -483,31 +164,30 @@ public class AgendamentoService {
                                 fechamento
                         );
 
-        List<Intervalo> intervalosOcupados =
-                criarIntervalosOcupados(
+        List<DisponibilidadeAgendaService.Intervalo> intervalosOcupados =
+                disponibilidadeService.criarIntervalosOcupados(
                         data,
                         agendamentos
                 );
 
-        List<Intervalo> intervalosLivres =
-                calcularIntervalosLivres(
+        List<DisponibilidadeAgendaService.Intervalo> intervalosLivres =
+                disponibilidadeService.calcularIntervalosLivres(
                         abertura,
                         fechamento,
                         intervalosOcupados
                 );
 
         List<IntervaloLivreResponse> disponibilidades =
-                filtrarIntervalosQueComportamServico(
+                disponibilidadeService.filtrarIntervalosQueComportamServico(
                         intervalosLivres,
                         servico
                 );
 
-        return criarRespostaDisponibilidade(
+        return disponibilidadeService.criarRespostaDisponibilidade(
                 servico,
                 data,
                 disponibilidades
         );
     }
-
 
 }
