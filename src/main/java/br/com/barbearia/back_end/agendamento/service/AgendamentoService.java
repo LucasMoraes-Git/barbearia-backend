@@ -38,12 +38,6 @@ public class AgendamentoService {
     @Autowired
     private ConfiguracaoAgendaProperties configuracaoAgenda;
 
-    private record Intervalo(
-            LocalDateTime inicio,
-            LocalDateTime fim
-    ) {
-    }
-
     private Agendamento buscarAgendamentoPorId(Long agendamentoId)
     {
         return agendamentoRepository.findById(agendamentoId).orElseThrow(() -> new RecursoNaoEncontradoException("Não existe um agendamento com id " + agendamentoId));
@@ -177,6 +171,16 @@ public class AgendamentoService {
                     "O agendamento com status "
                             + statusAtual
                             + " não pode ser reagendado."
+            );
+        }
+
+        LocalDateTime agora = LocalDateTime.now(
+                configuracaoAgenda.fusoHorario()
+        );
+
+        if (!agendamento.getDataServico().isAfter(agora)) {
+            throw new OperacaoInvalidaAgendamentoException(
+                    "Não é possível reagendar um agendamento que já começou."
             );
         }
 
