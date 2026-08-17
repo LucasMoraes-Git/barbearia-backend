@@ -19,7 +19,12 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
-
+import org.springframework.security.config.Customizer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.Arrays;
+import java.util.List;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
@@ -114,7 +119,7 @@ public class SecurityConfig {
             JwtAuthenticationConverter authenticationConverter
     ) throws Exception {
 
-        return http
+        return http.cors(Customizer.withDefaults())
 
                 // A autenticação é feita por JWT no cabeçalho Authorization,
                 // e não por sessão ou cookie.
@@ -190,5 +195,52 @@ public class SecurityConfig {
                 )
 
                 .build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource(
+            @Value("${app.cors.allowed-origins}")
+            String origensPermitidas
+    ) {
+        CorsConfiguration configuracao =
+                new CorsConfiguration();
+
+        List<String> origens =
+                Arrays.stream(origensPermitidas.split(","))
+                        .map(String::trim)
+                        .filter(origem -> !origem.isBlank())
+                        .toList();
+
+        configuracao.setAllowedOrigins(origens);
+
+        configuracao.setAllowedMethods(
+                List.of(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "PATCH",
+                        "DELETE",
+                        "OPTIONS"
+                )
+        );
+
+        configuracao.setAllowedHeaders(
+                List.of(
+                        "Authorization",
+                        "Content-Type"
+                )
+        );
+
+        configuracao.setAllowCredentials(false);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration(
+                "/**",
+                configuracao
+        );
+
+        return source;
     }
 }
