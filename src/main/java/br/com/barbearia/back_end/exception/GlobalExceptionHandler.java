@@ -164,4 +164,27 @@ public class GlobalExceptionHandler {
         return problema;
     }
 
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ProblemDetail tratarParametroInvalido(
+            MethodArgumentTypeMismatchException exception
+    ) {
+        ProblemDetail problema =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.BAD_REQUEST,
+                        "O valor '"
+                                + exception.getValue()
+                                + "' é inválido para o parâmetro '"
+                                + exception.getName()
+                                + "'."
+                );
+
+        problema.setTitle("Parâmetro inválido");
+        problema.setProperty(
+                "codigo",
+                "PARAMETRO_INVALIDO"
+        );
+
+        return problema;
+    }
+
 }
