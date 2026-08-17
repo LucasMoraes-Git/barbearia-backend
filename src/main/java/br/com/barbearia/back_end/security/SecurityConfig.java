@@ -119,10 +119,8 @@ public class SecurityConfig {
             JwtAuthenticationConverter authenticationConverter
     ) throws Exception {
 
-        return http.cors(Customizer.withDefaults())
-
-                // A autenticação é feita por JWT no cabeçalho Authorization,
-                // e não por sessão ou cookie.
+        return http
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
 
                 // Desativa as formas tradicionais de autenticação do Spring.
@@ -243,4 +241,5 @@ public class SecurityConfig {
 
         return source;
     }
+
 }

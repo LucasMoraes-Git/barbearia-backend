@@ -4,6 +4,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -87,4 +93,75 @@ public class GlobalExceptionHandler {
 
         return problema;
     }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ProblemDetail tratarDadosInvalidos(
+            MethodArgumentNotValidException exception
+    ) {
+        Map<String, String> erros =
+                new LinkedHashMap<>();
+
+        exception
+                .getBindingResult()
+                .getFieldErrors()
+                .forEach(erro ->
+                        erros.putIfAbsent(
+                                erro.getField(),
+                                erro.getDefaultMessage()
+                        )
+                );
+
+        ProblemDetail problema =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.BAD_REQUEST,
+                        "Um ou mais campos estão inválidos."
+                );
+
+        problema.setTitle("Dados inválidos");
+        problema.setProperty("codigo", "DADOS_INVALIDOS");
+        problema.setProperty("erros", erros);
+
+        return problema;
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ProblemDetail tratarParametroAusente(
+            MissingServletRequestParameterException exception
+    ) {
+        ProblemDetail problema =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.BAD_REQUEST,
+                        "O parâmetro '"
+                                + exception.getParameterName()
+                                + "' é obrigatório."
+                );
+
+        problema.setTitle("Parâmetro obrigatório ausente");
+        problema.setProperty(
+                "codigo",
+                "PARAMETRO_OBRIGATORIO_AUSENTE"
+        );
+
+        return problema;
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail tratarCorpoInvalido(
+            HttpMessageNotReadableException exception
+    ) {
+        ProblemDetail problema =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.BAD_REQUEST,
+                        "O corpo da requisição está ausente ou possui um JSON inválido."
+                );
+
+        problema.setTitle("Corpo da requisição inválido");
+        problema.setProperty(
+                "codigo",
+                "CORPO_REQUISICAO_INVALIDO"
+        );
+
+        return problema;
+    }
+
 }
