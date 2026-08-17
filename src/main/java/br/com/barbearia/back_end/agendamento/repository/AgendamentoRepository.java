@@ -90,7 +90,15 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
                 """,
             nativeQuery = true
     )
-
     boolean existeConflitoDeHorarioExceto(@Param("agendamentoId") Long agendamentoId, @Param("novoInicio") LocalDateTime novoInicio, @Param("novoFim") LocalDateTime novoFim);
+
+    @Query("""
+        SELECT agendamento
+        FROM Agendamento agendamento
+        WHERE agendamento.dataServico >= :inicio
+          AND agendamento.dataServico < :fim
+        ORDER BY agendamento.dataServico ASC
+        """)
+    List<Agendamento> buscarAgendamentosPorData(@Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim);
 
 }

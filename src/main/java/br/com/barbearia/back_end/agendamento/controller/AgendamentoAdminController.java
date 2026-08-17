@@ -4,9 +4,11 @@ import br.com.barbearia.back_end.agendamento.dto.AgendamentoResponse;
 import br.com.barbearia.back_end.agendamento.enums.StatusAgendamentoEnum;
 import br.com.barbearia.back_end.agendamento.service.AgendamentoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RequestMapping("/admin/agendamentos")
@@ -18,9 +20,15 @@ public class AgendamentoAdminController {
     private AgendamentoService service;
 
     @GetMapping
-    public ResponseEntity<List<AgendamentoResponse>> listarTodosAgendamentos()
-    {
-        return ResponseEntity.ok(service.listarTodosAgendamentos());
+    public ResponseEntity<List<AgendamentoResponse>> listarAgendamentos(
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate data
+    ) {
+        List<AgendamentoResponse> agendamentos;
+        agendamentos = service.listarAgendamentosPorData(data);
+
+        return ResponseEntity.ok(agendamentos);
     }
 
     @GetMapping("/status/{status}")

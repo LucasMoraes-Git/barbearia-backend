@@ -388,6 +388,22 @@ public class AgendamentoService {
         agendamento.setStatusAgendamento(StatusAgendamentoEnum.CONCLUIDO);
     }
 
+    public List<AgendamentoResponse> listarAgendamentosPorData(
+            LocalDate data
+    ) {
+        LocalDateTime inicio = data.atStartOfDay();
+
+        LocalDateTime fim = data
+                .plusDays(1)
+                .atStartOfDay();
+
+        return agendamentoRepository
+                .buscarAgendamentosPorData(inicio, fim)
+                .stream()
+                .map(mapper::paraAgendamentoResponse)
+                .toList();
+    }
+
 
 
 
