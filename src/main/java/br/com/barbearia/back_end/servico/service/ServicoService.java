@@ -23,10 +23,11 @@ public class ServicoService {
     @Autowired
     private ServicoMapper mapper;
 
-    public Servico cadastrarServico(CriarServicoRequest request)
+    public ServicoResponse cadastrarServico(CriarServicoRequest request)
     {
         Servico servico = mapper.criarParaEntidade(request);
-        return repository.save(servico);
+        Servico servicoCriado = repository.save(servico);
+        return mapper.servicoResponseDTO(servicoCriado);
     }
 
     public ServicoResponse findByIdServico(Long id)

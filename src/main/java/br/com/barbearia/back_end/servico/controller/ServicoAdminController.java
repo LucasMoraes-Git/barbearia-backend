@@ -39,9 +39,9 @@ public class ServicoAdminController {
     }
 
     @PostMapping("/cadastro")
-    public ResponseEntity<Servico> cadastrarServico(@Valid @RequestBody CriarServicoRequest request)
+    public ResponseEntity<ServicoResponse> cadastrarServico(@Valid @RequestBody CriarServicoRequest request)
     {
-        Servico servico = service.cadastrarServico(request);
+        ServicoResponse servico = service.cadastrarServico(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(servico);
     }
 

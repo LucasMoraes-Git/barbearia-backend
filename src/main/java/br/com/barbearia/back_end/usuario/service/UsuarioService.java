@@ -77,6 +77,11 @@ public class UsuarioService {
     public void atualizarNome(AlterarNomeUsuarioRequest request, Long id)
     {
         Usuario usuario = repository.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Usuário com este id não encontrado"));
+        if(!Boolean.TRUE.equals(usuario.getAtivo()))
+        {
+            throw new RecursoNaoEncontradoException("Usuário com id " + id + " foi desativado.");
+        }
+
         if(usuario.getNome().equals(request.nome()))
         {
             throw new AlteracaoInvalidaException("O novo nome inserido é o mesmo do antigo");
@@ -88,6 +93,11 @@ public class UsuarioService {
     public void atualizarTelefone(AlterarTelefoneUsuarioRequest request, Long id)
     {
         Usuario usuario = repository.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Usuário com este id não encontrado"));
+
+        if(!Boolean.TRUE.equals(usuario.getAtivo()))
+        {
+            throw new RecursoNaoEncontradoException("Usuário com id " + id + " foi desativado.");
+        }
 
         if(usuario.getTelefone().equals(request.telefone()))
         {
@@ -106,6 +116,11 @@ public class UsuarioService {
     public void atualizarSenha(AlterarSenhaUsuarioRequest request, Long id)
     {
         Usuario usuario = repository.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Usuário com este id não encontrado"));
+
+        if(!Boolean.TRUE.equals(usuario.getAtivo()))
+        {
+            throw new RecursoNaoEncontradoException("Usuário com id " + id + " foi desativado.");
+        }
 
         if(!passwordEncoder.matches(request.senhaAtual(), usuario.getSenha()))
         {
