@@ -66,4 +66,31 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
 
     Optional<Agendamento> findByIdAndUsuarioId(Long id, Long usuarioId);
 
+    @Query(
+            value = """
+                SELECT CASE
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM TBL_AGENDAMENTO a
+                        INNER JOIN TBL_SERVICO s
+                            ON s.ID_SERVICO = a.ID_SERVICO
+                        WHERE a.ID_AGENDAMENTO <> :agendamentoId
+                          AND a.TX_STATUS_AGENDAMENTO
+                              IN ('PENDENTE', 'CONFIRMADO')
+                          AND a.DT_DATA_SERVICO < :novoFim
+                          AND DATEADD(
+                                MINUTE,
+                                s.NR_DURACAO_MINUTOS,
+                                a.DT_DATA_SERVICO
+                              ) > :novoInicio
+                    )
+                    THEN CAST(1 AS BIT)
+                    ELSE CAST(0 AS BIT)
+                END
+                """,
+            nativeQuery = true
+    )
+
+    boolean existeConflitoDeHorarioExceto(@Param("agendamentoId") Long agendamentoId, @Param("novoInicio") LocalDateTime novoInicio, @Param("novoFim") LocalDateTime novoFim);
+
 }

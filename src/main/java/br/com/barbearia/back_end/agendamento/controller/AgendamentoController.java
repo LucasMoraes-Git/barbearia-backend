@@ -3,6 +3,7 @@ package br.com.barbearia.back_end.agendamento.controller;
 import br.com.barbearia.back_end.agendamento.dto.AgendamentoResponse;
 import br.com.barbearia.back_end.agendamento.dto.CriarAgendamentoRequest;
 import br.com.barbearia.back_end.agendamento.dto.DisponibilidadeAgendamentoResponse;
+import br.com.barbearia.back_end.agendamento.dto.ReagendarAgendamentoRequest;
 import br.com.barbearia.back_end.agendamento.entity.Agendamento;
 import br.com.barbearia.back_end.agendamento.enums.StatusAgendamentoEnum;
 import br.com.barbearia.back_end.agendamento.service.AgendamentoService;
@@ -60,6 +61,16 @@ public class AgendamentoController {
         service.cancelarAgendamento(id, usuarioId);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/reagendar")
+    public ResponseEntity<AgendamentoResponse> reagendarAgendamento(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody ReagendarAgendamentoRequest request)
+    {
+        Long usuarioId = Long.valueOf(jwt.getClaimAsString("usuarioId"));
+        AgendamentoResponse response = service.reagendarAgendamento(id, usuarioId, request);
+        return ResponseEntity.ok(response);
+    }
+
+
 
 
 

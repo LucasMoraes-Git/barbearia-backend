@@ -135,6 +135,107 @@ public class AgendamentoService {
         return mapper.paraAgendamentoResponse(agendamentoSalvo);
     }
 
+    @Transactional
+    public AgendamentoResponse reagendarAgendamento(
+            Long agendamentoId,
+            Long usuarioId,
+            ReagendarAgendamentoRequest request
+    ) {
+        Agendamento agendamento =
+                agendamentoRepository
+                        .findByIdAndUsuarioId(
+                                agendamentoId,
+                                usuarioId
+                        )
+                        .orElseThrow(() ->
+                                new RecursoNaoEncontradoException(
+                                        "Agendamento não encontrado."
+                                )
+                        );
+
+        if (
+                !Boolean.TRUE.equals(
+                        agendamento
+                                .getUsuario()
+                                .getAtivo()
+                )
+        ) {
+            throw new RecursoInativoException(
+                    "A conta está inativa."
+            );
+        }
+
+        StatusAgendamentoEnum statusAtual =
+                agendamento.getStatusAgendamento();
+
+        boolean permiteReagendamento =
+                statusAtual == StatusAgendamentoEnum.PENDENTE
+                        || statusAtual == StatusAgendamentoEnum.CONFIRMADO;
+
+        if (!permiteReagendamento) {
+            throw new OperacaoInvalidaAgendamentoException(
+                    "O agendamento com status "
+                            + statusAtual
+                            + " não pode ser reagendado."
+            );
+        }
+
+        Servico servico = agendamento.getServico();
+
+        if (!Boolean.TRUE.equals(servico.getAtivo())) {
+            throw new RecursoInativoException(
+                    "O serviço deste agendamento está inativo."
+            );
+        }
+
+        LocalDateTime novoInicio =
+                request.novaDataServico();
+
+        if (
+                novoInicio.equals(
+                        agendamento.getDataServico()
+                )
+        ) {
+            throw new OperacaoInvalidaAgendamentoException(
+                    "O novo horário é igual ao horário atual."
+            );
+        }
+
+        LocalDateTime novoFim =
+                novoInicio.plusMinutes(
+                        servico.getDuracaoMinutos()
+                );
+
+        disponibilidadeService.validarRegrasDaAgenda(
+                novoInicio,
+                novoFim
+        );
+
+        boolean existeConflito =
+                agendamentoRepository
+                        .existeConflitoDeHorarioExceto(
+                                agendamentoId,
+                                novoInicio,
+                                novoFim
+                        );
+
+        if (existeConflito) {
+            throw new HorarioIndisponivelException(
+                    "Existe outro agendamento que ocupa o novo intervalo."
+            );
+        }
+
+        agendamento.setDataServico(novoInicio);
+
+        agendamento.setStatusAgendamento(
+                StatusAgendamentoEnum.PENDENTE
+        );
+
+        return mapper.paraAgendamentoResponse(
+                agendamento
+        );
+    }
+
     public List<AgendamentoResponse> buscarAgendamentosIdUsuario(Long idUsuario)
     {
         Usuario usuario = usuarioRepository.findById(idUsuario).orElseThrow(() -> new RecursoNaoEncontradoException("Não há usuário com id " + idUsuario + "."));
@@ -269,7 +370,7 @@ public class AgendamentoService {
     {
         Agendamento agendamento = buscarAgendamentoPorId(agendamentoId);
 
-        exigirStatus(agendamento, StatusAgendamentoEnum.CONCLUIDO, "concluir");
+        exigirStatus(agendamento, StatusAgendamentoEnum.CONFIRMADO, "concluir");
 
         LocalDateTime fimDoServico = agendamento.getDataServico().plusMinutes(agendamento.getServico().getDuracaoMinutos());
 
@@ -282,6 +383,8 @@ public class AgendamentoService {
 
         agendamento.setStatusAgendamento(StatusAgendamentoEnum.CONCLUIDO);
     }
+
+
 
 
 }
