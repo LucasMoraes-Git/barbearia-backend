@@ -101,4 +101,18 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
         """)
     List<Agendamento> buscarAgendamentosPorData(@Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim);
 
+    @Query("""
+        SELECT agendamento
+        FROM Agendamento agendamento
+        WHERE agendamento.dataServico >= :inicio
+          AND agendamento.dataServico < :fim
+          AND agendamento.statusAgendamento = :status
+        ORDER BY agendamento.dataServico ASC
+        """)
+    List<Agendamento> buscarAgendamentosPorDataEStatus(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fim") LocalDateTime fim,
+            @Param("status") StatusAgendamentoEnum status
+    );
+
 }

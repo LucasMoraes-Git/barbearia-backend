@@ -23,10 +23,12 @@ public class AgendamentoAdminController {
     public ResponseEntity<List<AgendamentoResponse>> listarAgendamentos(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate data
+            LocalDate data,
+            @RequestParam(required = false)
+            StatusAgendamentoEnum status
     ) {
         List<AgendamentoResponse> agendamentos;
-        agendamentos = service.listarAgendamentosPorData(data);
+        agendamentos = service.listarAgendamentosPorData(data, status);
 
         return ResponseEntity.ok(agendamentos);
     }

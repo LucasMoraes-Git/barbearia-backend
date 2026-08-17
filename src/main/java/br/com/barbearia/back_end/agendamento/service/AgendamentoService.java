@@ -389,7 +389,8 @@ public class AgendamentoService {
     }
 
     public List<AgendamentoResponse> listarAgendamentosPorData(
-            LocalDate data
+            LocalDate data,
+            StatusAgendamentoEnum status
     ) {
         LocalDateTime inicio = data.atStartOfDay();
 
@@ -397,13 +398,27 @@ public class AgendamentoService {
                 .plusDays(1)
                 .atStartOfDay();
 
-        return agendamentoRepository
-                .buscarAgendamentosPorData(inicio, fim)
+        List<Agendamento> agendamentos;
+
+        if (status == null) {
+            agendamentos =
+                    agendamentoRepository
+                            .buscarAgendamentosPorData(inicio, fim);
+        } else {
+            agendamentos =
+                    agendamentoRepository
+                            .buscarAgendamentosPorDataEStatus(
+                                    inicio,
+                                    fim,
+                                    status
+                            );
+        }
+
+        return agendamentos
                 .stream()
                 .map(mapper::paraAgendamentoResponse)
                 .toList();
     }
-
 
 
 
