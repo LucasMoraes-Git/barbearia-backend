@@ -52,7 +52,6 @@ public class GlobalExceptionHandler {
     public ProblemDetail tratarRecursoRepetido(AlteracaoInvalidaException exception)
     {
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
-
         problema.setTitle("Alteração inválida");
         problema.setProperty("codigo", "ALTERACAO_INVALIDA");
 
@@ -63,7 +62,6 @@ public class GlobalExceptionHandler {
     public ProblemDetail tratarHorarioIndisponivel(HorarioIndisponivelException exception)
     {
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
-
         problema.setTitle("Horário indisponível");
         problema.setProperty("codigo", "HORARIO_INDISPONIVEL");
 
@@ -74,9 +72,19 @@ public class GlobalExceptionHandler {
     public ProblemDetail tratarRecursoInativo(RecursoInativoException exception)
     {
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
-
         problema.setTitle("Recurso está inativo");
         problema.setProperty("codigo", "RECURSO_INATIVO");
+
+        return problema;
+    }
+
+    @ExceptionHandler(OperacaoInvalidaAgendamentoException.class)
+    public ProblemDetail tratarOperacaoInvalida(OperacaoInvalidaAgendamentoException exception)
+    {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        problema.setTitle("Operação de agendamento inválida");
+        problema.setProperty("codigo", "OPERACAO_AGENDAMENTO_INVALIDA");
+
         return problema;
     }
 }

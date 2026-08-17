@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {
 
@@ -62,5 +63,7 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
     List<Agendamento> buscarAgendamentosNoPeriodo(@Param("inicioPeriodo") LocalDateTime inicioPeriodo, @Param("fimPeriodo") LocalDateTime fimPeriodo);
 
     List<Agendamento> findByUsuarioIdOrderByDataServicoDesc(Long usuarioId);
+
+    Optional<Agendamento> findByIdAndUsuarioId(Long id, Long usuarioId);
 
 }

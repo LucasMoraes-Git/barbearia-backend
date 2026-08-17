@@ -4,14 +4,8 @@ import br.com.barbearia.back_end.agendamento.config.ConfiguracaoAgendaProperties
 import br.com.barbearia.back_end.agendamento.dto.DisponibilidadeAgendamentoResponse;
 import br.com.barbearia.back_end.agendamento.dto.IntervaloLivreResponse;
 import br.com.barbearia.back_end.agendamento.entity.Agendamento;
-import br.com.barbearia.back_end.agendamento.mapper.AgendamentoMapper;
-import br.com.barbearia.back_end.agendamento.repository.AgendamentoRepository;
 import br.com.barbearia.back_end.exception.HorarioIndisponivelException;
-import br.com.barbearia.back_end.exception.RecursoNaoEncontradoException;
 import br.com.barbearia.back_end.servico.entity.Servico;
-import br.com.barbearia.back_end.servico.repository.ServicoRepository;
-import br.com.barbearia.back_end.usuario.repository.UsuarioRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,18 +19,7 @@ import java.util.List;
 public class DisponibilidadeAgendaService {
 
     @Autowired
-    protected ServicoRepository servicoRepository;
-    @Autowired
-    protected UsuarioRepository usuarioRepository;
-
-    @Autowired
     protected ConfiguracaoAgendaProperties configuracaoAgenda;
-
-
-    @Autowired
-    protected AgendamentoRepository agendamentoRepository;
-    @Autowired
-    protected AgendamentoMapper mapper;
 
     protected record Intervalo(
             LocalDateTime inicio,

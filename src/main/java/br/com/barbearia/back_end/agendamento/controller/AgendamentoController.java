@@ -53,4 +53,14 @@ public class AgendamentoController {
         return ResponseEntity.ok(response);
     }
 
+    @PatchMapping("/{id}/cancelar")
+    public ResponseEntity<Void> cancelarAgendamento(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id)
+    {
+        Long usuarioId = Long.valueOf(jwt.getClaimAsString("usuarioId"));
+        service.cancelarAgendamento(id, usuarioId);
+        return ResponseEntity.noContent().build();
+    }
+
+
+
 }

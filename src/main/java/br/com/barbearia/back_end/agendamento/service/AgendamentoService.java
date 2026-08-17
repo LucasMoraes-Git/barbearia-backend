@@ -7,6 +7,7 @@ import br.com.barbearia.back_end.agendamento.enums.StatusAgendamentoEnum;
 import br.com.barbearia.back_end.agendamento.mapper.AgendamentoMapper;
 import br.com.barbearia.back_end.agendamento.repository.AgendamentoRepository;
 import br.com.barbearia.back_end.exception.HorarioIndisponivelException;
+import br.com.barbearia.back_end.exception.OperacaoInvalidaAgendamentoException;
 import br.com.barbearia.back_end.exception.RecursoInativoException;
 import br.com.barbearia.back_end.exception.RecursoNaoEncontradoException;
 import br.com.barbearia.back_end.servico.entity.Servico;
@@ -41,6 +42,21 @@ public class AgendamentoService {
             LocalDateTime inicio,
             LocalDateTime fim
     ) {
+    }
+
+    private Agendamento buscarAgendamentoPorId(Long agendamentoId)
+    {
+        return agendamentoRepository.findById(agendamentoId).orElseThrow(() -> new RecursoNaoEncontradoException("Não existe um agendamento com id " + agendamentoId));
+    }
+
+    private void exigirStatus(Agendamento agendamento, StatusAgendamentoEnum statusEsperado, String operacao)
+    {
+        StatusAgendamentoEnum statusAtual = agendamento.getStatusAgendamento();
+
+        if(statusEsperado != statusAtual)
+        {
+            throw new OperacaoInvalidaAgendamentoException("Não é possível " + operacao + " um agendamento com status " + statusAtual + ".");
+        }
     }
 
     public List<AgendamentoResponse> listarTodosAgendamentos()
@@ -189,5 +205,83 @@ public class AgendamentoService {
                 disponibilidades
         );
     }
+
+    @Transactional
+    public void cancelarAgendamento(Long agendamentoId, Long usuarioId)
+    {
+        Agendamento agendamento = agendamentoRepository.findByIdAndUsuarioId(agendamentoId, usuarioId).orElseThrow(() -> new RecursoNaoEncontradoException("Agendamento não encontrado"));
+
+        if(!Boolean.TRUE.equals(agendamento.getUsuario().getAtivo()))
+        {
+            throw new RecursoInativoException("A conta está inativa.");
+        }
+
+        StatusAgendamentoEnum status = agendamento.getStatusAgendamento();
+
+        boolean permiteCancelamento = status == StatusAgendamentoEnum.PENDENTE || status == StatusAgendamentoEnum.CONFIRMADO;
+
+        if(!permiteCancelamento)
+        {
+            throw new OperacaoInvalidaAgendamentoException("O agendamento com status " + status + " não pode ser cancelado");
+        }
+
+        LocalDateTime agora = LocalDateTime.now(
+                configuracaoAgenda.fusoHorario()
+        );
+
+        if (!agendamento.getDataServico().isAfter(agora))
+        {
+            throw new OperacaoInvalidaAgendamentoException("Não é possível cancelar um agendamento que já começou.");
+        }
+
+        agendamento.setStatusAgendamento(StatusAgendamentoEnum.CANCELADO);
+    }
+
+    @Transactional
+    public void confirmarAgendamento(Long agendamentoId)
+    {
+        Agendamento agendamento = buscarAgendamentoPorId(agendamentoId);
+
+        exigirStatus(agendamento, StatusAgendamentoEnum.PENDENTE, "confirmar");
+
+        LocalDateTime agora = LocalDateTime.now(configuracaoAgenda.fusoHorario());
+
+        if (!agendamento.getDataServico().isAfter(agora))
+        {
+            throw new OperacaoInvalidaAgendamentoException("Não é possível confirmar um agendamento que já começou.");
+        }
+
+        agendamento.setStatusAgendamento(StatusAgendamentoEnum.CONFIRMADO);
+    }
+
+    @Transactional
+    public void recusarAgendamento(Long agendamentoId)
+    {
+        Agendamento agendamento = buscarAgendamentoPorId(agendamentoId);
+
+        exigirStatus(agendamento, StatusAgendamentoEnum.PENDENTE, "recusar");
+
+        agendamento.setStatusAgendamento(StatusAgendamentoEnum.RECUSADO);
+    }
+
+    @Transactional
+    public void concluirAgendamento(Long agendamentoId)
+    {
+        Agendamento agendamento = buscarAgendamentoPorId(agendamentoId);
+
+        exigirStatus(agendamento, StatusAgendamentoEnum.CONCLUIDO, "concluir");
+
+        LocalDateTime fimDoServico = agendamento.getDataServico().plusMinutes(agendamento.getServico().getDuracaoMinutos());
+
+        LocalDateTime agora = LocalDateTime.now(configuracaoAgenda.fusoHorario());
+
+        if (agora.isBefore(fimDoServico))
+        {
+            throw new OperacaoInvalidaAgendamentoException("O agendamento não pode ser concluído antes do término previsto.");
+        }
+
+        agendamento.setStatusAgendamento(StatusAgendamentoEnum.CONCLUIDO);
+    }
+
 
 }
